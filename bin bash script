@@ -1,0 +1,39 @@
+#!/bin/bash
+domain="XX.XXX"                             # your domain
+type="A"                                    # Record type A, CNAME, MX, etc.
+name="sip"                                  # name of record to update
+ttl="3600"                                  # Time to Live min value 600
+port="1"                                    # Required port, Min value 1
+weight="1"                                  # Required weight, Min value 1
+key="your key"                              # key for godaddy developer API (if doesn't work change to "apikey" and "apisecret", also modify the script accordingly)
+secret="secret"                             # secret for godaddy developer API
+
+headers="Authorization: sso-key $key:$secret"
+
+ echo $headers
+
+result=$(curl -s -X GET -H "$headers" \
+ "https://api.godaddy.com/v1/domains/$domain/records/$type/$name")
+
+dnsIp=$(echo $result | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b")
+ echo "dnsIp:" $dnsIp
+
+# Get public ip address there are several websites that can do this.
+ret=$(curl -s GET "http://ipinfo.io/json")
+#echo $ret
+currentIp=$(echo $ret | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b")
+ echo "currentIp:" $currentIp
+
+ if [ $dnsIp != $currentIp ];
+ then
+        echo "IP's are not equal, updating record"
+        curl -X PUT "https://api.godaddy.com/v1/domains/$domain/records/$type/$name" \
+-H "accept: application/json" \
+-H "Content-Type: application/json" \
+-H "$headers" \
+-d "[ { \"data\": \"$currentIp\", \"port\": $port, \"priority\": 0, \"protocol\": \"string\", \"service\": \"string\", \"ttl\"$
+fi
+ if [ $dnsIp = $currentIp ];
+ then
+      echo "IP's are equal, no update required"
+fi
